@@ -16,5 +16,34 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+
+    Not   (in=load, out=notload);
+    Or    (a=load, b=notload, out=one);
+    Not16 (in=in, out=notin16);
+    And16 (a=in, b=notin16, out=zeromask);
+
+    Register (in=mux3, load=one, out=r1, out=out);
+    Inc16 (in=r1, out=r1plus1);
+    Mux16 (a=r1, b=r1plus1, sel=inc, out=mux1);
+    Mux16 (a=mux1, b=in, sel=load, out=mux2);
+    Mux16 (a=mux2, b=zeromask, sel=reset, out=mux3);
+
+    /*
+
+
+    Inc16 (in=zeromask, out=one16);
+
+    ALU (x=reg, y=one16, zx=reset, nx=zero, zy=inc, ny=zero,  )*/
+
+    /*Not16 (in=in, out=notin);
+    And16 (a=in, b=notin, out=zeromask);
+
+
+    Mux16 (a=reg, b=in, sel=load, out=loadmux);
+
+
+    Inc16 (in=in,  out=inplus1);
+    Inc16 (in=reg, out=regplus1);*/
+
+
 }
