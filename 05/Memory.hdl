@@ -5,20 +5,20 @@
 
 /**
  * The complete address space of the Hack computer's memory,
- * including RAM and memory-mapped I/O. 
+ * including RAM and memory-mapped I/O.
  * The chip facilitates read and write operations, as follows:
  *     Read:  out(t) = Memory[address(t)](t)
  *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
- * In words: the chip always outputs the value stored at the memory 
- * location specified by address. If load==1, the in value is loaded 
- * into the memory location specified by address. This value becomes 
+ * In words: the chip always outputs the value stored at the memory
+ * location specified by address. If load==1, the in value is loaded
+ * into the memory location specified by address. This value becomes
  * available through the out output from the next time step onward.
  * Address space rules:
- * Only the upper 16K+8K+1 words of the Memory chip are used. 
- * Access to address>0x6000 is invalid. Access to any address in 
- * the range 0x4000-0x5FFF results in accessing the screen memory 
- * map. Access to address 0x6000 results in accessing the keyboard 
- * memory map. The behavior in these addresses is described in the 
+ * Only the upper 16K+8K+1 words of the Memory chip are used.
+ * Access to address>0x6000 is invalid. Access to any address in
+ * the range 0x4000-0x5FFF results in accessing the screen memory
+ * map. Access to address 0x6000 results in accessing the keyboard
+ * memory map. The behavior in these addresses is described in the
  * Screen and Keyboard chip specifications given in the book.
  */
 
@@ -28,4 +28,46 @@ CHIP Memory {
 
     PARTS:
     // Put your code here:
+
+    // Determine which memory segment the address is pointing to
+    And (a=address[0], b=address[0], out=kbd1);
+    And (a=kbd1, b=address[1], out=kbd2);
+    And (a=kbd2, b=address[2], out=kbd3);
+    And (a=kbd3, b=address[3], out=kbd4);
+    And (a=kbd4, b=address[4], out=kbd5);
+    And (a=kbd5, b=address[5], out=kbd6);
+    And (a=kbd6, b=address[6], out=kbd7);
+    And (a=kbd7, b=address[7], out=kbd8);
+    And (a=kbd8, b=address[8], out=kbd9);
+    And (a=kbd9, b=address[9], out=kbd10);
+    And (a=kbd10, b=address[10], out=kbd11);
+    And (a=kbd11, b=address[11], out=kbd12);
+    And (a=kbd12, b=address[12], out=kbd13);
+    And (a=kbd13, b=address[13], out=kbd14);
+    And (a=kbd14, b=address[14], out=kbd);
+    Not (in=kbd, out=notkbd);
+    And (a=notkbd, b=address[14], out=screen);
+    Not (in=screen, out=notscreen);
+    And (a=notscreen, b=notkbd, out=ram);
+
+    // Create vars for loading
+    And (a=kbd, b=load, out=loadkbd);
+    DMux (in=screen, sel=address[13], a=screen1, b=screen2);     // 8K screen is represented as two 4K RAM
+    And (a=screen1, b=load, out=loadscreen1);
+    And (a=screen2, b=load, out=loadscreen2);
+    And (a=ram, b=load, out=loadram);
+
+    //RAM
+    RAM16K (in=in, load=loadram, address=address[0..13], out=ramout);
+    // Screen
+    RAM4K  (in=in, load=loadscreen1, address=address[0..11], out=screen1out);
+    RAM4K  (in=in, load=loadscreen2, address=address[0..11], out=screen2out);
+    //Keyboard
+    Register (in=in, load=loadkbd, out=kbdout);
+
+    //Select output
+    Mux16  (a=screen1out, b=screen2out, sel=screen2, out=mux1);
+    Mux16  (a=mux1, b=kbdout, sel=kbd, out=mux2);
+    Mux16  (a=mux2, b=ramout, sel=ram, out=out);
+
 }

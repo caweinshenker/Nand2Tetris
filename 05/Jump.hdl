@@ -1,0 +1,28 @@
+
+
+CHIP Jump {
+
+  IN instruction[16], res[16];
+  OUT out[8];
+
+  PARTS:
+
+  Or    (a=instruction[0], b=instruction[1], out=isjmp1);
+  Or    (a=isjmp1, b=instruction[2], out=isjmp);
+  DMux8Way (in=isjmp, sel=instruction[0..2], a=nojmp, b=jgt, c=jeq, d=jge, e=jlt, f=jne, g=jle, h=jmp);
+  Or16Way (in=res, out=notzero);
+  Not  (in=notzero, out=zero);
+  Or  (a=notzero, b=zero, out=oneConst);
+  DMux  (in=oneConst, sel=res[15], a=ge, b=lt);
+  //Nand (a=res[15], b=res[15], out=ge);
+  Or   (a=zero, b=lt, out=le);
+  And  (a=ge, b=notzero, out=gt);
+  And  (a=zero, b=notzero, out=out[0]);
+  And  (a=jgt, b=gt, out=out[1]);
+  And  (a=jeq, b=zero, out=out[2]);
+  And  (a=jge, b=ge, out=out[3]);
+  And  (a=jlt, b=lt, out=out[4]);
+  And  (a=jne, b=notzero, out=out[5]);
+  And  (a=jle, b=le, out=out[6]);
+  And  (a=jmp, b=jmp, out=out[7]);
+}
